@@ -1,0 +1,11 @@
+- insert:
+    - id: dsh-memory-team
+      name: dsh-memory-team
+      config:
+        ttlDays: 30
+        recallLimit: 3
+        recallChars: 6000
+        maxWorkers: 2
+        repeatThreshold: 3
+        checkpointSteps: 20
+        longOutputTokens: 4000

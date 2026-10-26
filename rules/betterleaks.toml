@@ -1,0 +1,18 @@
+# The embedded rules are pinned by the required Betterleaks 1.9.0 binary.
+# No project config, allow comments, online validation or validation credentials.
+title = "DSH local memory credentials"
+[extend]
+useDefault = true
+
+# Memory snippets can contain an identifier without its matching secret component.
+[[rules]]
+id = "dsh-aws-access-id"
+description = "Conservatively hide standalone AWS access identifiers in memory"
+regex = '''(?:AKIA|ASIA)[A-Z0-9]{16}'''
+keywords = ["AKIA", "ASIA"]
+
+[[rules]]
+id = "dsh-slack-token"
+description = "Conservatively hide Slack token-shaped strings in memory"
+regex = '''xox[baprs]-[A-Za-z0-9-]{20,}'''
+keywords = ["xoxb-", "xoxa-", "xoxp-", "xoxr-", "xoxs-"]

@@ -1,0 +1,86 @@
+{
+  "name": "dsh-memory-team",
+  "version": "0.5.3-beta.3",
+  "description": "Markdown knowledge shared with Basic Memory and Obsidian, automatic task records and native subagent coordination for DeepSeek Harness.",
+  "icon": "./icon.jpg",
+  "author": "ytsu-ki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ytsu-ki/dsh-memory-team.git"
+  },
+  "homepage": "https://github.com/ytsu-ki/dsh-memory-team#readme",
+  "bugs": {
+    "url": "https://github.com/ytsu-ki/dsh-memory-team/issues"
+  },
+  "type": "module",
+  "main": "lib/memory-team.js",
+  "exports": {
+    ".": "./lib/memory-team.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./icon": "./icon.jpg",
+    "./locale/*.json": "./locale/*.json",
+    "./legacy-stream-guard": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "scripts/setup-knowledge.mjs",
+    "scripts/basic-memory-macos-arm64.txt",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "icon.jpg",
+    "rules",
+    "scripts/setup-retrieval.mjs",
+    "scripts/inspect-windows-acl.ps1",
+    "scripts/inspect-windows-acl.mjs",
+    "docs/windows-acceptance.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=22.17.0"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "check": "node --check lib/memory-team.js && node --check lib/memory.js && node --check lib/team.js && node --check lib/efficiency.js && node --check lib/index.js && node --check lib/guard.js && node --check lib/fetch-scope.js && node --check lib/basic-memory.js && node --check scripts/setup-knowledge.mjs && node --check lib/knowledge-index.js && node --check lib/secrets.js && node --check lib/windows-acl.js && node --check scripts/inspect-windows-acl.mjs && node --check scripts/setup-retrieval.mjs",
+    "test": "node --test test/*.test.js",
+    "release:prepare": "python3 scripts/prepare-release.py"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "~3.18.4",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@orama/orama": "3.1.18",
+    "chokidar": "5.0.0",
+    "yaml": "2.9.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-agent-loop": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-agent-loop-testkit": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm-deepseek": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-session-query": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-subagent": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-subagent-spawn-in-process": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tool-subagent": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "memory",
+    "subagent",
+    "coordination"
+  ],
+  "license": "MIT"
+}

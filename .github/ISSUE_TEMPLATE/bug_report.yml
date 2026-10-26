@@ -1,0 +1,68 @@
+name: Bug report
+description: Report startup failures, unexpected exits, memory retrieval or subagent coordination problems.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. This project is still in Beta / Experimental development. Complete Windows desktop acceptance is pending.
+
+        For startup failures, try **Disable third-party plugins, back up profile patch, and restart** in the recovery dialog. It disables third-party plugins, backs up the profile patch and attempts a restart. Other third-party plugins are affected too.
+
+        Keep diagnostic logs and redact credentials, tokens and private information before submitting. Do not upload the entire knowledge base or complete session history.
+  - type: input
+    id: versions
+    attributes:
+      label: DSH and plugin versions
+      description: Provide both versions. If the UI cannot start, use the installer/package version or mark it unknown.
+      placeholder: "DSH 0.2.1-rc.2; dsh-memory-team 0.5.3-beta.3"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and architecture
+      placeholder: "Windows 11 x64 / macOS arm64; for CLI use, include node -v"
+    validations:
+      required: true
+  - type: textarea
+    id: installation
+    attributes:
+      label: Installation method and related plugins
+      description: Include the actual install spec, desktop or CLI, profile type and recently installed/updated plugins. Do not include account credentials.
+      placeholder: "Desktop plugin manager: https://github.com/ytsu-ki/dsh-memory-team.git#v0.5.3-beta.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: memory_backend
+    attributes:
+      label: Memory configuration
+      options:
+        - Default SQLite with no additional configuration
+        - Markdown / Basic Memory configured
+        - Unknown or unrelated
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps, expected result and actual result
+      description: Specify whether the issue occurs during installation, enabling, restart or a task, and whether it happens every time.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostic_log
+    attributes:
+      label: Diagnostic report log
+      description: |
+        Attach the crash-...-host.log identified by Diagnostic report in the dialog. You can drag the file here.
+        Preserve Failed plugins, the first exception and its complete stack trace where possible. The final waiting-service list in a screenshot is usually insufficient to establish the cause.
+        If no log is available, explain why. Redact credentials, tokens, usernames and other private information before submitting.
+      placeholder: "Attach a redacted log, or paste Failed plugins and the first exception stack."
+    validations:
+      required: true
+  - type: textarea
+    id: recovery
+    attributes:
+      label: Recovery after disabling plugins
+      description: Did you try the recovery dialog option, and could the host start afterward? Explain if it has not been tried.

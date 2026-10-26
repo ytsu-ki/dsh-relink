@@ -1,0 +1,11 @@
+node_modules/
+.pnpm-store/
+*.tgz
+.DS_Store
+.local/
+__pycache__/
+*.pyc
+DeepSeek-Harness-*.md
+outputs/
+*.sqlite
+*.sqlite-*
