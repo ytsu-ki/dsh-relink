@@ -1,6 +1,6 @@
 {
   "name": "dsh-relink",
-  "version": "0.6.0-beta.1",
+  "version": "0.6.0-beta.2",
   "description": "Project memory in local SQLite or a Markdown vault shared with Obsidian, unverified task records and native subagent coordination for DeepSeek Harness.",
   "icon": "./icon.jpg",
   "author": "ytsu-ki",
@@ -35,6 +35,8 @@
     "README.md",
     "LICENSE",
     "icon.jpg",
+    "docs/plugin-preview-en.jpg",
+    "docs/plugin-preview-zh.jpg",
     "docs/architecture.md",
     "docs/migration.md",
     "docs/compatibility.md",

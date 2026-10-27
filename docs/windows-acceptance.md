@@ -1,13 +1,13 @@
 # Windows acceptance
 
-This document covers 0.6.0-beta.1. Earlier betas spent most of their Windows work on file watchers: recursive child handles blocked parent renames, a parent watcher was needed to notice root renames, and watcher failures needed retry and reconciliation logic. 0.6.0 removes watchers entirely. Markdown is reconciled by a metadata scan when memory is read, so the plugin holds no handle on the vault between reads. That removes the watcher failure classes but does **not** by itself prove Windows desktop behaviour, which has not been verified for this release.
+This document covers 0.6.0-beta.2. Earlier betas spent most of their Windows work on file watchers: recursive child handles blocked parent renames, a parent watcher was needed to notice root renames, and watcher failures needed retry and reconciliation logic. 0.6.0 removes watchers entirely. Markdown is reconciled by a metadata scan when memory is read, so the plugin holds no handle on the vault between reads. That removes the watcher failure classes but does **not** by itself prove Windows desktop behaviour, which has not been verified for this release.
 
 ## Before installation
 
 Keep the primary profile unchanged. If the test profile already has `dsh-memory-team` installed, remove it before installing `dsh-relink`. Create a separate test profile with DSH's supported flow and back up its configuration, sessions and memory. Do not delete a home-directory `.git` or clear global npm/Git proxies; distinguish network or proxy failures from plugin loading errors.
 
 ```powershell
-dsh plugin --profile windows-memory-test add 'C:\Downloads\dsh-relink-0.6.0-beta.1.tgz'
+dsh plugin --profile windows-memory-test add 'C:\Downloads\dsh-relink-0.6.0-beta.2.tgz'
 ```
 
 Developers run `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm check` and `pnpm test` with Node.js 22.17+ or 24. CI is configured for Windows with Node 22, 24, 22.17.0 and 24.18.0; configuration alone is not evidence that a commit passed.

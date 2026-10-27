@@ -1,6 +1,8 @@
-# Migration and rollback: dsh-memory-team 0.5.x to dsh-relink 0.6.0-beta.1
+# Migration and rollback: dsh-memory-team 0.5.x to dsh-relink 0.6.0-beta.2
 
-0.6.0-beta.1 reads 0.5.x data in place. Canonical data is not converted, renamed or rewritten, so upgrading is a reinstall and rolling back is a reinstall of the earlier package. Only derived index files change format, and both versions rebuild what they need.
+The plugin is displayed as **dsh-relink** in English and **鱼的记忆** in Chinese. The package name and plugin id remain `dsh-relink`.
+
+0.6.0-beta.2 reads 0.5.x data in place. Canonical data is not converted, renamed or rewritten, so upgrading is a reinstall and rolling back is a reinstall of the earlier package. Only derived index files change format, and both versions rebuild what they need.
 
 ## The rename
 
@@ -12,13 +14,13 @@ From 0.6.0-beta.1 the package and plugin are named **dsh-relink** (formerly **ds
 | Plugin id in profile patches: `id: dsh-relink` | Default database `data/dsh-memory-team.sqlite` and the state directory |
 | Legacy guard import: `dsh-relink/legacy-stream-guard` | Vault layout, note format, history and trash |
 | System prompt section names and log prefix | Recall message source tag and session projection keys stored in session logs |
-| Release files: `dsh-relink-0.6.0-beta.1.tgz` and `-source.zip` | Tool names and arguments |
+| Release files: `dsh-relink-0.6.0-beta.2.tgz` and `-source.zip` | Tool names and arguments |
 
 Harness treats the renamed package as a different plugin. **Remove `dsh-memory-team` from the profile before installing `dsh-relink`.** Both register the same session projection, so if both stay enabled, whichever loads second fails to activate (the host keeps running; the failure appears in its plugin diagnostics). This was verified by loading both into one Cordis context in either order, and in the real desktop runtime (0.2.1-rc.3, macOS arm64) with both packages installed: the host printed `1 entry did not activate`, kept the other plugin active and finished the task normally. A profile patch entry with `id: dsh-memory-team` no longer configures anything; rename it to `id: dsh-relink`.
 
 ## Data map
 
-| Data | Location | 0.5.x | 0.6.0-beta.1 | Action |
+| Data | Location | 0.5.x | 0.6.0-beta.2 | Action |
 | --- | --- | --- | --- | --- |
 | SQLite records | `database` (default `$DSH_PROFILE_DIR/data/dsh-memory-team.sqlite`) | schema `user_version` 1 | same schema, same `memory_fts` token format | none |
 | Markdown notes | `<knowledgeRoot>/projects/<name>-<hash>/facts/*.md`, `journal/*.md` | frontmatter `dsh_*` fields | same layout and fields; earlier section headings still read | none; never rewritten |
@@ -55,7 +57,7 @@ Harness treats the renamed package as a different plugin. **Remove `dsh-memory-t
    ```
 
    Pass `--database`, `--vault` and `--state-dir` when they differ from the defaults. The report lists record counts, the SQLite schema version, note counts and derived files.
-3. Remove `dsh-memory-team` from the profile through the plugin manager, then install 0.6.0-beta.1 through the plugin manager or `dsh plugin --profile <test-profile> add /absolute/path/dsh-relink-0.6.0-beta.1.tgz`, and restart Harness when prompted. Rename any `id: dsh-memory-team` entry in the profile patch to `id: dsh-relink`.
+3. Remove `dsh-memory-team` from the profile through the plugin manager, then install 0.6.0-beta.2 through the plugin manager or `dsh plugin --profile <test-profile> add /absolute/path/dsh-relink-0.6.0-beta.2.tgz`, and restart Harness when prompted. Rename any `id: dsh-memory-team` entry in the profile patch to `id: dsh-relink`.
 4. Call `project_memory_status`: check `plugin_version`, `backend`, `health` (`ok` or `no-match`) and that `configuration.problems` is empty.
 5. Optional, once you no longer plan to roll back, remove the obsolete 0.5.x snapshots:
 

@@ -15,7 +15,7 @@ body:
     attributes:
       label: DSH and plugin versions
       description: Provide both versions. If the UI cannot start, use the installer/package version or mark it unknown.
-      placeholder: "DSH 0.2.1-rc.3; dsh-relink 0.6.0-beta.1 (project_memory_status reports plugin_version)"
+      placeholder: "DSH 0.2.1-rc.3; dsh-relink 0.6.0-beta.2 (project_memory_status reports plugin_version)"
     validations:
       required: true
   - type: input
@@ -30,7 +30,7 @@ body:
     attributes:
       label: Installation method and related plugins
       description: Include the actual install spec, desktop or CLI, profile type and recently installed/updated plugins. Do not include account credentials.
-      placeholder: "Desktop plugin manager: /absolute/path/dsh-relink-0.6.0-beta.1.tgz"
+      placeholder: "Desktop plugin manager: /absolute/path/dsh-relink-0.6.0-beta.2.tgz"
     validations:
       required: true
   - type: dropdown

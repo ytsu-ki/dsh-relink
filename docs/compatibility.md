@@ -1,6 +1,6 @@
 # Supported versions
 
-Status for 0.6.0-beta.1. "Verified" means the listed check was run for this release on the named environment; "configured" means CI is set up but no result is claimed here; "not verified" means no evidence exists for this release.
+Status for 0.6.0-beta.2. The English display name is `dsh-relink`; the Chinese display name is **鱼的记忆**. The naming update does not change the memory formats, storage paths or tool interfaces. "Verified" means the listed check was run for this release on the named environment; "configured" means CI is set up but no result is claimed here; "not verified" means no evidence exists for this release.
 
 ## Host and runtime
 
@@ -8,15 +8,15 @@ Status for 0.6.0-beta.1. "Verified" means the listed check was run for this rele
 | --- | --- | --- | --- |
 | DeepSeek Harness desktop runtime | 0.2.1-rc.3 (Electron 44.7.0, Node 24.21.0), macOS arm64 | Verified | Real host boots of an isolated profile with the packed plugin (`test/host/desktop-acceptance.mjs`, five cold processes per backend): install through `dsh plugin add`, seven tools and the system prompt section in the first model request, `project_memory_status` and `project_memory_save` executed by the host (status reports `electron: 44.7.0`), recall in a new host process, journals in Markdown mode, exit code 0 and no plugin errors on stderr. Timings are in `docs/benchmarks.md`. |
 | DeepSeek Harness desktop app (GUI cold start) | 0.2.1-rc.3, macOS arm64 | Not verified | The acceptance script runs the same Electron Node-mode runtime and plugin loader headlessly; it does not click through the desktop window. |
-| DeepSeek Harness on Windows | any | Not verified | No Windows machine was available. The first Windows CI run, for commit `015c124`, failed 32 tests in test code: cleanup removed directories before closing the databases in them, a lock test assumed PID 1 is alive, and a rename test moved a folder holding the open catalog. Those tests are fixed but have not been re-run on Windows. See `docs/windows-acceptance.md` for the required manual acceptance. |
-| DeepSeek Harness on Linux | any | Not verified | CI is configured for Ubuntu. |
+| DeepSeek Harness on Windows | any | Not verified | The test fixes passed all four Windows combinations (Node 22, 24, 22.17.0 and 24.18.0) in [CI at 762478c](https://github.com/ytsu-ki/dsh-relink/actions/runs/40449435247). This does not verify Windows desktop GUI cold starts. See `docs/windows-acceptance.md` for manual acceptance. |
+| DeepSeek Harness on Linux | any | Not verified | Ubuntu Node 22/24 passed in the same CI run; desktop GUI acceptance remains unverified. |
 | SDK packages used by tests | 0.2.1-rc.2 (pinned dev dependencies), 0.2.1-rc.3 | Verified | Full suite on both. The plugin-facing JavaScript of `cordis`, `dsh-tools`, `dsh-agent`, `dsh-agent-loop`, `dsh-session`, `dsh-session-projection`, `dsh-subagent`, `dsh-tool-subagent`, `dsh-system-prompt` and `dsh-working-directory` is byte-identical between rc.2 and the rc.3 desktop bundle. |
 | Cordis | 4.0.5 | Verified | Same version in the SDK and the desktop bundle. |
 | Node.js | 22.17.0 minimum; 24.x; 26.x | See table below | `node:sqlite` with FTS5 is required and is built in from 22.13; the desktop runtime's Electron Node also provides it (checked). |
 
 ## Node.js test runs
 
-All runs at commit `b55302f` with the real Basic Memory 0.23.2, Betterleaks 1.9.0 and 0.5.3-beta.3 rollback tests enabled. The two skips are the Windows-only ACL tests.
+Historical 0.6.0-beta.1 runs at commit `b55302f` with the real Basic Memory 0.23.2, Betterleaks 1.9.0 and 0.5.3-beta.3 rollback tests enabled. The two skips are the Windows-only ACL tests.
 
 | Node.js | SDK packages | Platform | Tests | Pass | Fail | Skipped |
 | --- | --- | --- | --- | --- | --- | --- |

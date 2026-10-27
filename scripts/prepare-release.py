@@ -14,8 +14,9 @@ import zipfile
 REQUIRED = {
     'package.json', 'lib/memory-team.js', 'lib/core/service.js', 'lib/stores/catalog.js',
     'lib/stores/markdown-store.js', 'lib/stores/sqlite-store.js', 'lib/legacy/stream-guard.js', 'lib/windows-acl.js',
-    'rules/betterleaks.toml', 'scripts/inspect-windows-acl.mjs', 'scripts/migrate.mjs', 'locale/en.json',
+    'rules/betterleaks.toml', 'scripts/inspect-windows-acl.mjs', 'scripts/migrate.mjs', 'locale/en.json', 'locale/zh.json',
     'cordis.patch.yml', 'icon.jpg', 'README.md', 'LICENSE', 'docs/migration.md', 'docs/compatibility.md',
+    'docs/plugin-preview-en.jpg', 'docs/plugin-preview-zh.jpg',
 }
 SOURCE_REQUIRED = {'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'test/filesystem.test.js', 'test/contract.test.js',
                    'test/windows-acl.test.js', 'scripts/prepare-release.py', '.github/workflows/test.yml',

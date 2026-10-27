@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./icon.jpg" alt="Project Memory and Teams" width="140" />
+  <img src="./icon.jpg" alt="dsh-relink / 鱼的记忆" width="140" />
 </p>
 
-<h1 align="center">dsh-relink</h1>
+<h1 align="center">dsh-relink · 鱼的记忆</h1>
 
 <p align="center">
   <b>Project memory and native subagent coordination for <a href="https://github.com/deepseek-ai/deepseek-harness">DeepSeek Harness</a></b><br />
@@ -11,7 +11,7 @@
 
 <p align="center">
   <img alt="Status: beta" src="https://img.shields.io/badge/status-beta-orange" />
-  <img alt="Version 0.6.0-beta.1" src="https://img.shields.io/badge/version-0.6.0--beta.1-blue" />
+  <img alt="Version 0.6.0-beta.2" src="https://img.shields.io/badge/version-0.6.0--beta.2-blue" />
   <img alt="DeepSeek Harness 0.2.1-rc.2 / rc.3" src="https://img.shields.io/badge/DeepSeek%20Harness-0.2.1--rc.2%20%7C%20rc.3-4D6BFE" />
   <img alt="Node.js 22.17 or later" src="https://img.shields.io/badge/node-%E2%89%A522.17-339933" />
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green" />
@@ -27,6 +27,10 @@
 
 > [!NOTE]
 > This is an unofficial community project and a **prerelease**. Please try it in a separate test profile first. See [Status](#status).
+
+### Interface
+
+![dsh-relink in an isolated Harness profile](docs/plugin-preview-en.jpg)
 
 ### Highlights
 
@@ -70,14 +74,14 @@ Some searches are 1-2 ms slower than before; [the benchmark notes](docs/benchmar
 
 ### Installation
 
-1. Download `dsh-relink-0.6.0-beta.1.tgz` from [Releases](https://github.com/ytsu-ki/dsh-relink/releases) and check it against `SHA256SUMS`.
+1. Download `dsh-relink-0.6.0-beta.2.tgz` from [Releases](https://github.com/ytsu-ki/dsh-relink/releases) and check it against `SHA256SUMS`.
 2. In Harness, open **Plugins > Add plugin** (preferably in a test profile) and enter the absolute path of the downloaded file.
-3. Enable **Project Memory and Teams** and restart Harness when prompted.
+3. Enable **dsh-relink** and restart Harness when prompted.
 
 From the command line:
 
 ```sh
-dsh plugin --profile my-test-profile add /absolute/path/dsh-relink-0.6.0-beta.1.tgz
+dsh plugin --profile my-test-profile add /absolute/path/dsh-relink-0.6.0-beta.2.tgz
 ```
 
 That is all you need: memory works immediately with local SQLite. Do not edit profile manifests or lockfiles by hand.
@@ -212,10 +216,14 @@ The older stream-request guard is still available as `dsh-relink/legacy-stream-g
 
 ## 简体中文
 
-**dsh-relink**（原名 dsh-memory-team）让 Harness 中的智能体不必反复探索已经知道的事情。每次新请求发送给模型之前，它会为当前项目召回少量真正相关的已验证结论；没有相关内容时，它会如实说明，而不是塞入无关信息。它还可以把真正独立的调查交给两个原生子代理并行处理，并展示一轮缓慢的任务把时间花在了哪里。它从不对模型设置时限、不取消有效工作，也不截断用户要求的输出。
+**鱼的记忆（dsh-relink）**（原名 dsh-memory-team）让 Harness 中的智能体不必反复探索已经知道的事情。每次新请求发送给模型之前，它会为当前项目召回少量真正相关的已验证结论；没有相关内容时，它会如实说明，而不是塞入无关信息。它还可以把真正独立的调查交给两个原生子代理并行处理，并展示一轮缓慢的任务把时间花在了哪里。它从不对模型设置时限、不取消有效工作，也不截断用户要求的输出。
 
 > [!NOTE]
 > 这是一个非官方的社区项目，目前为**预发布版**。请先在单独的测试配置（profile）中试用，详见[项目状态](#项目状态)。
+
+### 界面
+
+![鱼的记忆在隔离 Harness 配置中的运行界面](docs/plugin-preview-zh.jpg)
 
 ### 亮点
 
@@ -259,14 +267,14 @@ The older stream-request guard is still available as `dsh-relink/legacy-stream-g
 
 ### 安装
 
-1. 从 [Releases](https://github.com/ytsu-ki/dsh-relink/releases) 下载 `dsh-relink-0.6.0-beta.1.tgz`，并用 `SHA256SUMS` 核对校验和。
+1. 从 [Releases](https://github.com/ytsu-ki/dsh-relink/releases) 下载 `dsh-relink-0.6.0-beta.2.tgz`，并用 `SHA256SUMS` 核对校验和。
 2. 在 Harness 中打开 **Plugins > Add plugin**（建议使用测试配置），输入下载文件的绝对路径。
-3. 启用 **Project Memory and Teams**，按提示重启 Harness。
+3. 启用 **鱼的记忆**，按提示重启 Harness。
 
 命令行安装：
 
 ```sh
-dsh plugin --profile my-test-profile add /absolute/path/dsh-relink-0.6.0-beta.1.tgz
+dsh plugin --profile my-test-profile add /absolute/path/dsh-relink-0.6.0-beta.2.tgz
 ```
 
 到这里就可以使用了：记忆功能默认使用本地 SQLite，开箱即用。请不要手动编辑配置清单或锁文件。
