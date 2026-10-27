@@ -1,0 +1,90 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: python3 -m unittest discover -s test -p release_test.py
+      - run: pnpm release:prepare --out .local/ci-release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate
+          path: .local/ci-release/
+          include-hidden-files: true
+  test:
+    needs: package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [22, 24]
+        include:
+          - os: windows-latest
+            node: 22.17.0
+          - os: windows-latest
+            node: 24.18.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: candidate
+          path: .local/ci-release
+      - id: unpack
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import importlib.util, json, os, pathlib, shutil, zipfile
+          root = pathlib.Path.cwd()
+          spec = importlib.util.spec_from_file_location('release', root / 'scripts/prepare-release.py')
+          release = importlib.util.module_from_spec(spec); spec.loader.exec_module(release)
+          artifacts = root / '.local/ci-release'
+          tgz = next(artifacts.glob('*.tgz')); source = next(artifacts.glob('*-source.zip'))
+          release.verify(tgz, source)
+          with zipfile.ZipFile(source) as archive:
+              archive.extractall(root / '.local/acceptance-src')
+          extracted = next((root / '.local/acceptance-src').iterdir())
+          consumer = pathlib.Path(os.environ['RUNNER_TEMP']) / 'dsh-package-consumer'
+          consumer.mkdir()
+          (consumer / 'package.json').write_text(json.dumps({'name': 'dsh-package-consumer', 'private': True, 'type': 'module', 'dependencies': {'dsh-relink': 'file:' + tgz.as_posix()}}), encoding='utf-8')
+          shutil.copyfile(root / 'pnpm-workspace.yaml', consumer / 'pnpm-workspace.yaml')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('source=' + extracted.as_posix() + '\nconsumer=' + consumer.as_posix() + '\nentry=' + (consumer / 'node_modules/dsh-relink/lib/memory-team.js').as_uri() + '\n')
+          PY
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: ${{ steps.unpack.outputs.source }}
+      - run: pnpm check
+        working-directory: ${{ steps.unpack.outputs.source }}
+      - run: pnpm test
+        working-directory: ${{ steps.unpack.outputs.source }}
+      - name: Recall quality on the labelled corpus
+        shell: bash
+        run: |
+          node bench/quality.mjs --entry lib/memory-team.js --backend sqlite
+          node bench/quality.mjs --entry lib/memory-team.js --backend markdown --queries holdout
+        working-directory: ${{ steps.unpack.outputs.source }}
+      - run: pnpm install --ignore-scripts
+        working-directory: ${{ steps.unpack.outputs.consumer }}
+      - run: node --test test/cold-start.test.js
+        working-directory: ${{ steps.unpack.outputs.source }}
+        env:
+          DSH_RELINK_TEST_ENTRY: ${{ steps.unpack.outputs.entry }}

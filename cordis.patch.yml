@@ -1,0 +1,11 @@
+- insert:
+    - id: dsh-relink
+      name: dsh-relink
+      config:
+        ttlDays: 30
+        recallLimit: 3
+        recallChars: 6000
+        maxWorkers: 2
+        repeatThreshold: 3
+        checkpointSteps: 20
+        longOutputTokens: 4000

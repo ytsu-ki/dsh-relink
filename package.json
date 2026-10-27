@@ -1,0 +1,89 @@
+{
+  "name": "dsh-relink",
+  "version": "0.6.0-beta.1",
+  "description": "Project memory in local SQLite or a Markdown vault shared with Obsidian, unverified task records and native subagent coordination for DeepSeek Harness.",
+  "icon": "./icon.jpg",
+  "author": "ytsu-ki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ytsu-ki/dsh-relink.git"
+  },
+  "homepage": "https://github.com/ytsu-ki/dsh-relink#readme",
+  "bugs": {
+    "url": "https://github.com/ytsu-ki/dsh-relink/issues"
+  },
+  "type": "module",
+  "main": "lib/memory-team.js",
+  "exports": {
+    ".": "./lib/memory-team.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json",
+    "./icon": "./icon.jpg",
+    "./locale/*.json": "./locale/*.json",
+    "./legacy-stream-guard": "./lib/legacy/stream-guard.js"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "rules",
+    "scripts/setup-knowledge.mjs",
+    "scripts/setup-retrieval.mjs",
+    "scripts/inspect-windows-acl.ps1",
+    "scripts/inspect-windows-acl.mjs",
+    "scripts/migrate.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "icon.jpg",
+    "docs/architecture.md",
+    "docs/migration.md",
+    "docs/compatibility.md",
+    "docs/benchmarks.md",
+    "docs/windows-acceptance.md",
+    "docs/legacy-stream-guard.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=22.17.0"
+  },
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "test": "node --test test/*.test.js",
+    "bench": "node bench/run.mjs --label current --entry lib/memory-team.js --quality",
+    "release:prepare": "python3 scripts/prepare-release.py"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "~3.18.4",
+    "yaml": "2.9.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-agent-loop": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-agent-loop-testkit": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-llm-deepseek": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-session-query": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-subagent": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-subagent-spawn-in-process": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tool-subagent": "0.2.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.2"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "memory",
+    "subagent",
+    "coordination"
+  ],
+  "license": "MIT"
+}
