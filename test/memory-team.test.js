@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, rm, writeFile, readFile, mkdir, realpath, stat } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, mkdir, realpath, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { randomUUID } from 'node:crypto'
@@ -10,14 +10,15 @@ import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@deep
 import * as plugin from '../lib/memory-team.js'
 import { efficiencyProjection } from '../lib/efficiency.js'
 import { TeamCoordinator } from '../lib/team.js'
-import { isolateHome, crashCanary } from './helpers.js'
+import { isolateHome, crashCanary, cleanup, removeTree } from './helpers.js'
 
 async function setup(t, response) {
   await isolateHome(t); crashCanary(t)
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-team-test-')))
+  cleanup(t, () => removeTree(dir))
   await mkdir(join(dir, '.git'))
   const ctx = new Context()
-  t.after(async () => { await ctx.fiber.dispose(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   const catalog = new Map()
   const calls = []
@@ -130,7 +131,7 @@ test('real agent admission persists one bounded memory context and excludes stal
 
 test('fresh sessions recall saved evidence only in the matching project and expose scope/storage diagnostics', { timeout: 8000 }, async t => {
   const f = await setup(t), other = await realpath(await mkdtemp(join(tmpdir(), 'dsh-recall-other-')))
-  t.after(() => rm(other, { recursive: true, force: true }))
+  cleanup(t, () => removeTree(other))
   await mkdir(join(other, '.git'))
   await writeFile(join(f.dir, 'source.txt'), 'version one')
   const answer = `EVIDENCE-${randomUUID()}`
@@ -359,10 +360,10 @@ test('recall in one session is resent only when it changes; unchanged and repeat
 test('activation creates no files, processes or handles; a missing vault is reported, never recreated', { timeout: 8000 }, async t => {
   await isolateHome(t); crashCanary(t)
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-lazy-')))
-  t.after(() => rm(dir, { recursive: true, force: true }))
+  cleanup(t, () => removeTree(dir))
   const project = join(dir, 'project'); await mkdir(join(project, '.git'), { recursive: true })
   const ctx = new Context()
-  t.after(() => ctx.fiber.dispose())
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   ctx.provide('subagents', { listChildren: async () => [] })
   const harness = await mountAgentLoopTestHarness(ctx)
@@ -388,10 +389,10 @@ test('invalid local settings disable memory with a diagnostic while the plugin a
   await mkdir(join(home, '.local/share/dsh-memory-team'), { recursive: true })
   await writeFile(join(home, '.local/share/dsh-memory-team/settings.json'), '{ not json')
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-badconfig-')))
-  t.after(() => rm(dir, { recursive: true, force: true }))
+  cleanup(t, () => removeTree(dir))
   await mkdir(join(dir, '.git'))
   const ctx = new Context()
-  t.after(() => ctx.fiber.dispose())
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   ctx.provide('subagents', { listChildren: async () => [] })
   const harness = await mountAgentLoopTestHarness(ctx)

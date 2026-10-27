@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, writeFile, readFile, rm, mkdir, realpath } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, mkdir, realpath } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { execFile, spawn } from 'node:child_process'
@@ -12,9 +12,11 @@ import { SqliteStore } from '../lib/stores/sqlite-store.js'
 import { MarkdownStore } from '../lib/stores/markdown-store.js'
 import { encodeNote, scopeOf } from '../lib/stores/note.js'
 import { extractTurn } from '../lib/dsh/capture.js'
+import { cleanup, removeTree } from './helpers.js'
 
 async function fakeScanner(t, mode = 'normal') {
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-secret-test-'))), command = join(dir, 'scanner.mjs')
+  cleanup(t, () => removeTree(dir))
   await writeFile(command, `
 if (process.argv[2] === 'version') { process.stdout.write('1.9.0\\n'); process.exit(0) }
 const args = process.argv.slice(2)
@@ -30,7 +32,7 @@ else process.stdout.write(JSON.stringify(input.includes('SYNTHETIC_CREDENTIAL') 
     spawnFile: (file, args, options) => spawn(process.execPath, [file, ...args], options),
   })
   const services = []
-  t.after(async () => { for (const service of services) await service.close(); scanner.close(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, async () => { for (const service of services) await service.close(); scanner.close() })
   return { dir, scanner, services }
 }
 
@@ -87,7 +89,7 @@ test('Markdown saves, external recall, the derived catalog and SQLite all screen
   const found = await markdown.search(project, 'external')
   assert.equal(found.records.length, 1); assert(!JSON.stringify(found).includes('SYNTHETIC_CREDENTIAL'))
   const db = new DatabaseSync(markdown.storeFor(project).status(project).catalog, { readOnly: true })
-  t.after(() => db.close())
+  cleanup(t, () => db.close())
   assert(!JSON.stringify(db.prepare('SELECT * FROM note_terms').all()).toLowerCase().includes('synthetic_credential'))
 })
 
@@ -127,11 +129,12 @@ test('real Betterleaks 1.9.0 detects synthetic AWS credentials and preserves ord
   assert(!(await scanner.sanitize(`\u79bb\u7ebf\u683c\u5f0f\u6837\u4f8b\uff1a${slack}`)).includes(slack))
 
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-secret-real-'))), project = join(dir, 'project')
+  cleanup(t, () => removeTree(dir))
   await mkdir(project)
   await mkdir(join(dir, 'vault'))
   const store = new MarkdownStore({ root: join(dir, 'vault'), stateDir: join(dir, 'state'), scanner })
   const service = new MemoryService({ scanner, sqlite: () => { throw new Error('unused') }, markdown: () => store })
-  t.after(async () => { await service.close(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, () => service.close())
   const events = [
     { type: 'turn/start', data: { turn: 1 } },
     { type: 'user/message', data: { source: { kind: 'user' }, content: [{ type: 'text', text: `\u79bb\u7ebf\u683c\u5f0f\u9a8c\u6536 ${key}` }] } },

@@ -15,7 +15,7 @@ Developers run `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm check` a
 ## What changed for Windows in 0.6.0
 
 - No Chokidar, `fs.watch`, parent watcher, retry timer or 60-second reconciliation timer. Directory renames and replacements cannot be blocked by plugin watch handles.
-- Activation opens no file. The SQLite database and the derived catalog are opened on first memory use and closed on unload.
+- Activation opens no file. The SQLite database and the derived catalog are opened on first memory use and closed on unload. While open they block renaming any folder that contains them, because Windows does not rename a directory with an open file below it. Keep the database and the state directory (`basicMemoryConfig`) outside the vault and outside any folder that may be moved while Harness runs; the defaults, under the profile directory, already are.
 - A missing or moved vault is reported as `unavailable` (`VAULT_MISSING`) and is never recreated at the old path.
 - Trash moves fall back to copy-and-delete when the vault and state directory are on different volumes (`EXDEV`).
 - Plugin writers in different processes (for example desktop and CLI on one profile) are serialized by lock files in the state directory.
@@ -28,7 +28,7 @@ Developers run `pnpm install --frozen-lockfile --ignore-scripts`, `pnpm check` a
 | Cold start | Exit and reopen the desktop app with the test profile. `project_memory_status` shows the plugin version, `loaded_at`, host PID, Node and Electron versions; all seven tools exist. Repeat a complete exit and start and confirm saved memory is still found, with no new startup error. A port change alone does not prove a restart. |
 | Project isolation | With `.git` in the home directory, two working directories without their own `.git` keep separate scopes. A marker saved in one is not recalled in the other. Nested repositories, worktrees and junctions keep correct identities. |
 | Fresh-session recall | Save a random marker, open a new session without the history, ask for its key: the plugin context in the request contains it. Unrelated requests, the other project, changed evidence and expired records recall nothing. |
-| Directory replacement | Another process repeatedly renames or replaces the project folder while the desktop app runs; no `EPERM` is caused by the plugin, and the next search shows the final contents. Repeat for the whole vault and an ancestor directory; memory is `unavailable` while moved and recovers when restored. |
+| Directory replacement | Another process repeatedly renames or replaces the project folder while the desktop app runs; no `EPERM` is caused by the plugin, and the next search shows the final contents. Repeat for the whole vault and an ancestor directory that does not contain the database or state directory; memory is `unavailable` while moved and recovers when restored. |
 | Idle cost | After searches, Task Manager shows no CPU use attributable to the host from this plugin while idle, and handle counts return to their earlier level. |
 | Subagents | Two independent tasks overlap and return results to the parent; repeating the dispatch creates no duplicate; native permissions and cancellation still apply. |
 | Uninstall and reinstall | Tools disappear while the database and Markdown remain; reinstallation reads the records. |

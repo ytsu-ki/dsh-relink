@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, realpath } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -14,13 +14,14 @@ import SubagentModelSelectionConfig from '@deepseek-ai/dsh-tool-subagent/model-s
 import * as Persistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import { SessionQueryEngine } from '@deepseek-ai/dsh-session-query'
 import * as plugin from '../lib/memory-team.js'
-import { isolateHome, crashCanary } from './helpers.js'
+import { isolateHome, crashCanary, cleanup, removeTree } from './helpers.js'
 
 for (const selectionEnabled of [false, true]) test(`production subagents preserve native effort ${selectionEnabled ? 'selection' : 'inheritance'} and return concurrent results`, { timeout: 8000 }, async t => {
   await isolateHome(t); crashCanary(t)
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-native-team-'))
+  const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-native-team-')))
+  cleanup(t, () => removeTree(dir))
   const ctx = new Context()
-  t.after(async () => { await ctx.fiber.dispose(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   await ctx.plugin(Persistence, { root: join(dir, 'sessions') })
   new SessionQueryEngine(ctx)
@@ -81,9 +82,10 @@ for (const selectionEnabled of [false, true]) test(`production subagents preserv
 
 test('running native workers fill the team; finished resident workers do not block the next plan', { timeout: 10000 }, async t => {
   await isolateHome(t); crashCanary(t)
-  const dir = await mkdtemp(join(tmpdir(), 'dsh-native-capacity-'))
+  const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-native-capacity-')))
+  cleanup(t, () => removeTree(dir))
   const ctx = new Context()
-  t.after(async () => { await ctx.fiber.dispose(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   await ctx.plugin(Persistence, { root: join(dir, 'sessions') })
   new SessionQueryEngine(ctx)

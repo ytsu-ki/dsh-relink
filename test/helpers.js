@@ -1,8 +1,8 @@
 // Shared fixtures: temporary projects, both canonical stores behind one MemoryService, and a
 // canary for the host's fail-loud handlers.
-import { mkdtemp, mkdir, realpath, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, realpath, rm, readdir, readlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import assert from 'node:assert/strict'
 import { MemoryService } from '../lib/core/service.js'
@@ -12,11 +12,45 @@ import { MarkdownStore } from '../lib/stores/markdown-store.js'
 
 export const BACKENDS = ['sqlite', 'markdown']
 
+const cleanups = new WeakMap()
+/**
+ * Run `operation` after the test, most recently registered first, so handles close before the
+ * directories that hold them are removed. node:test runs `t.after` hooks in registration order.
+ * Every cleanup runs even when an earlier one fails.
+ */
+export function cleanup(t, operation) {
+  let stack = cleanups.get(t)
+  if (!stack) {
+    cleanups.set(t, stack = [])
+    t.after(async () => {
+      const errors = []
+      while (stack.length) await Promise.resolve().then(stack.pop()).catch(error => errors.push(error))
+      if (errors.length) throw errors.length === 1 ? errors[0] : new AggregateError(errors, 'test cleanup failed')
+    })
+  }
+  stack.push(operation)
+}
+
+/** Paths below `dir` this process still has open. Only Linux exposes them cheaply; elsewhere none are reported. */
+export async function openFilesUnder(dir) {
+  const fds = await readdir('/proc/self/fd').catch(() => null)
+  if (!fds) return []
+  const paths = await Promise.all(fds.map(fd => readlink(join('/proc/self/fd', fd)).catch(() => '')))
+  return paths.filter(path => path === dir || path.startsWith(dir + sep))
+}
+
+/** Remove a test directory, failing if a file in it was still open: Windows refuses that with EBUSY. */
+export async function removeTree(dir) {
+  const open = await openFilesUnder(dir)
+  await rm(dir, { recursive: true, force: true, maxRetries: 5 })
+  assert.deepEqual(open, [], `still open when ${dir} was removed`)
+}
+
 export async function workspace(t, prefix = 'dsh-test-') {
   const dir = await realpath(await mkdtemp(join(tmpdir(), prefix)))
   const project = join(dir, 'project'), other = join(dir, 'other'), vault = join(dir, 'vault'), state = join(dir, 'state')
   for (const path of [join(project, '.git'), join(other, '.git'), vault]) await mkdir(path, { recursive: true })
-  t.after(() => rm(dir, { recursive: true, force: true }))
+  cleanup(t, () => removeTree(dir))
   return { dir, project, other, vault, state, database: join(dir, 'memory.sqlite') }
 }
 
@@ -24,7 +58,7 @@ export async function workspace(t, prefix = 'dsh-test-') {
 export function memoryService(t, w, backend, { scanner = new SecretScanner(), ttlDays = 30, catalog = 'disk' } = {}) {
   const service = new MemoryService({ ttlDays, scanner, sqlite: () => new SqliteStore(w.database),
     markdown: backend === 'markdown' ? () => new MarkdownStore({ root: w.vault, stateDir: w.state, scanner, catalog }) : null })
-  t.after(async () => { await service.close(); scanner.close() })
+  cleanup(t, async () => { await service.close(); scanner.close() })
   return service
 }
 
@@ -60,9 +94,9 @@ export async function isolateHome(t) {
   const previous = { HOME: process.env.HOME, USERPROFILE: process.env.USERPROFILE, DSH_HOME: process.env.DSH_HOME, DSH_PROFILE_DIR: process.env.DSH_PROFILE_DIR }
   process.env.HOME = home; process.env.USERPROFILE = home
   delete process.env.DSH_HOME; delete process.env.DSH_PROFILE_DIR
-  t.after(async () => {
+  cleanup(t, async () => {
     for (const [key, value] of Object.entries(previous)) { if (value === undefined) delete process.env[key]; else process.env[key] = value }
-    await rm(home, { recursive: true, force: true })
+    await removeTree(home)
   })
   return home
 }

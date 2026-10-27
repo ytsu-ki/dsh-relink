@@ -9,7 +9,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { workspace, memoryService, isolateHome, fact } from './helpers.js'
+import { workspace, memoryService, isolateHome, fact, cleanup } from './helpers.js'
 import { terms } from '../lib/core/text.js'
 import { encodeNote, scopeOf } from '../lib/stores/note.js'
 import { recallProjection, recallMessage } from '../lib/dsh/recall.js'
@@ -39,7 +39,7 @@ test('a 0.5.x SQLite database is used in place and new writes stay in the 0.5.x 
   await service.save(w.project, fact, 'new-session')
   await service.close()
   const db = new DatabaseSync(w.database, { readOnly: true })
-  t.after(() => db.close())
+  cleanup(t, () => db.close())
   assert.equal(db.prepare('PRAGMA user_version').get().user_version, 1)
   // The 0.5.x query: quoted legacy terms joined with OR over memory_fts.
   const legacyQuery = query => db.prepare('SELECT m.key FROM memory_fts f JOIN memories m ON m.id=f.rowid WHERE memory_fts MATCH ? AND m.project=?')

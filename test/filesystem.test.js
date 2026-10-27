@@ -8,14 +8,18 @@ import { join, dirname } from 'node:path'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { setTimeout as delay } from 'node:timers/promises'
-import { workspace, memoryService } from './helpers.js'
+import { workspace, memoryService, cleanup } from './helpers.js'
 import { encodeNote, scopeOf } from '../lib/stores/note.js'
 import { MarkdownStore } from '../lib/stores/markdown-store.js'
 import { MarkdownCatalog } from '../lib/stores/catalog.js'
 
 const note = (project, key, body) => encodeNote({ title: key, dsh_key: key, dsh_project: project, dsh_updated_at: Date.now(), dsh_status: 'verified', dsh_kind: 'fact', dsh_files: [] }, body)
-async function fixture(t, options) {
-  const w = await workspace(t, 'dsh-fs-'), service = memoryService(t, w, 'markdown', options)
+async function fixture(t, { vault, ...options } = {}) {
+  const base = await workspace(t, 'dsh-fs-')
+  // `vault` moves the vault to a path relative to the workspace, away from the state directory.
+  const w = vault ? { ...base, vault: join(base.dir, vault) } : base
+  if (vault) await mkdir(w.vault, { recursive: true })
+  const service = memoryService(t, w, 'markdown', options)
   const folder = join(w.vault, 'projects', scopeOf(w.project))
   const put = async (key, body, dir = folder) => { await mkdir(join(dir, 'facts'), { recursive: true }); const path = join(dir, 'facts', `${key}.md`); await writeFile(path, note(w.project, key, body)); return path }
   const keys = async query => (await service.search(w.project, query)).records.map(r => r.key)
@@ -103,7 +107,9 @@ test('root deletion, recreation and twenty cross-process directory replacements 
 })
 
 test('moving the vault or an ancestor reports unavailable memory and never recreates the vault', async t => {
-  const f = await fixture(t)
+  // The catalog stays open in the state directory between reads, and Windows refuses to rename a
+  // directory with an open file below it, so the moved ancestor holds only the vault.
+  const f = await fixture(t, { vault: join('library', 'vault') })
   await f.put('vault-note', 'Vault move numbat evidence.')
   assert.deepEqual(await f.keys('vault-note'), ['vault-note'])
   await rename(f.vault, `${f.vault}-moved`)
@@ -115,13 +121,12 @@ test('moving the vault or an ancestor reports unavailable memory and never recre
   assert.deepEqual(await f.keys('vault-note'), ['vault-note'])
   // Move an ancestor of the vault.
   const ancestor = dirname(f.vault), parked = `${ancestor}-parked`
-  const relocatedVault = join(parked, 'vault')
   await rename(ancestor, parked)
-  t.after(() => rename(parked, ancestor).catch(() => {}))
+  cleanup(t, () => rename(parked, ancestor).catch(() => {}))
   assert.equal((await f.service.search(f.project, 'vault-note')).status, 'unavailable')
+  await assert.rejects(stat(f.vault), { code: 'ENOENT' }, 'the vault is not recreated below a moved ancestor')
   await rename(parked, ancestor)
   assert.deepEqual(await f.keys('vault-note'), ['vault-note'])
-  assert(relocatedVault)
 })
 
 test('warm restarts reuse the catalog, corrupt or unusable catalogs degrade safely, and memory mode writes no files', async t => {
@@ -134,13 +139,13 @@ test('warm restarts reuse the catalog, corrupt or unusable catalogs degrade safe
   await f.service.close()
   const scanner = f.service.scanner
   const reopened = new MarkdownStore({ root: f.vault, stateDir: f.state, scanner })
-  t.after(() => reopened.close())
+  cleanup(t, () => reopened.close())
   await reopened.sync(f.project)
   assert.equal(reopened.status(f.project).last_reconcile.read, 0, 'a restart rereads no unchanged note')
   await reopened.close()
   writeFileSync(catalog, 'not a sqlite database')
   const repaired = new MarkdownStore({ root: f.vault, stateDir: f.state, scanner })
-  t.after(() => repaired.close())
+  cleanup(t, () => repaired.close())
   await repaired.sync(f.project)
   assert.equal(repaired.status(f.project).catalog_rebuilt, 'corrupt')
   assert.equal(repaired.status(f.project).last_reconcile.read, 31)
@@ -150,12 +155,12 @@ test('warm restarts reuse the catalog, corrupt or unusable catalogs degrade safe
   await writeFile(blocked, 'a file, not a directory')
   const { MemoryService } = await import('../lib/core/service.js')
   const degraded = new MemoryService({ scanner, sqlite: () => { throw new Error('unused') }, markdown: () => new MarkdownStore({ root: f.vault, stateDir: blocked, scanner }) })
-  t.after(() => degraded.close())
+  cleanup(t, () => degraded.close())
   const result = await degraded.search(f.project, 'echidna')
   assert.equal(result.status, 'degraded'); assert.match(result.diagnostics.degraded, /^catalog-unavailable/)
   assert.deepEqual(result.records.map(r => r.key), ['target'], 'degraded indexing still answers from Markdown')
   const memoryOnly = new MemoryService({ scanner, sqlite: () => { throw new Error('unused') }, markdown: () => new MarkdownStore({ root: f.vault, stateDir: join(f.dir, 'memory-state'), scanner, catalog: 'memory' }) })
-  t.after(() => memoryOnly.close())
+  cleanup(t, () => memoryOnly.close())
   assert.equal((await memoryOnly.search(f.project, 'echidna')).status, 'ok')
   await assert.rejects(readdir(join(f.dir, 'memory-state', 'recall-index')), { code: 'ENOENT' })
 })

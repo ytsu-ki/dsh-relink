@@ -3,7 +3,7 @@
 // plugin; with BASIC_MEMORY_TEST_COMMAND set, an independent Basic Memory indexes the same vault.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readFile, writeFile, readdir, rm, realpath, rename } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, readdir, realpath, rename } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash, randomUUID } from 'node:crypto'
@@ -15,7 +15,7 @@ import { LlmAdapter, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@deepseek-ai/dsh-agent-loop-testkit'
 import * as plugin from '../lib/memory-team.js'
 import { scopeOf, decodeNote, encodeNote } from '../lib/stores/note.js'
-import { isolateHome, crashCanary } from './helpers.js'
+import { isolateHome, crashCanary, cleanup, removeTree } from './helpers.js'
 
 const basicMemory = process.env.BASIC_MEMORY_TEST_COMMAND
 async function eventually(check, message, timeoutMs = 10000) {
@@ -28,10 +28,11 @@ const recallOf = request => request.messages.filter(m => m.source?.kind === 'dsh
 async function setup(t, extra = {}) {
   await isolateHome(t); crashCanary(t)
   const dir = await realpath(await mkdtemp(join(tmpdir(), 'dsh-md-e2e-')))
+  cleanup(t, () => removeTree(dir))
   const project = join(dir, 'project'), root = join(dir, 'vault'), state = join(dir, 'state')
   await mkdir(join(project, '.git'), { recursive: true }); await mkdir(root)
   const ctx = new Context()
-  t.after(async () => { await ctx.fiber.dispose(); await rm(dir, { recursive: true, force: true }) })
+  cleanup(t, () => ctx.fiber.dispose())
   await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
   ctx.provide('subagents', { listChildren: async () => [] })
   const harness = await mountAgentLoopTestHarness(ctx), requests = []

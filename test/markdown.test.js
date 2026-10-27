@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdir, readFile, writeFile, readdir, symlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { workspace, memoryService, fact, hanFact } from './helpers.js'
+import { workspace, memoryService, fact, hanFact, cleanup } from './helpers.js'
 import { encodeNote, decodeNote, scopeOf } from '../lib/stores/note.js'
 import { redact } from '../lib/core/secrets.js'
 
@@ -62,7 +62,7 @@ test('private notes never enter results or the derived catalog, including notes 
   const status = service.storeFor(w.project).status(w.project)
   assert.deepEqual(status.catalog_counts, { private: 2 })
   const db = new DatabaseSync(status.catalog, { readOnly: true })
-  t.after(() => db.close())
+  cleanup(t, () => db.close())
   const dump = JSON.stringify([db.prepare('SELECT * FROM notes').all(), db.prepare('SELECT * FROM note_terms').all()])
   assert(!dump.includes('PRIVATE_MARKER') && !dump.includes('quokka') && !dump.includes('\u9690\u79c1'))
 })
